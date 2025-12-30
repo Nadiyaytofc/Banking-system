@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BANK OF LK - Manager Portal</title>
+    <style>
+        :root { --bank-blue: #0f172a; --bank-gold: #f59e0b; --bg: #0f172a; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; padding: 0; margin: 0; }
+        
+        /* Banner Section */
+        .banner {
+            width: 100%; height: 160px;
+            background: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.7)), 
+                        url('https://images.unsplash.com/photo-1454165833467-13594d99e021?auto=format&fit=crop&q=80&w=1000');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-bottom: 4px solid var(--bank-gold); border-radius: 0 0 25px 25px; margin-bottom: 30px;
+        }
+
+        .container { max-width: 1000px; margin: auto; padding: 20px; }
+
+        /* Application Card Styles */
+        .app-card { 
+            background: #1e293b; padding: 25px; border-radius: 15px; margin-bottom: 25px; 
+            border-left: 8px solid var(--bank-gold); display: grid; 
+            grid-template-columns: 150px 1fr 250px; gap: 20px; align-items: center; 
+        }
+
+        /* Account Management Card Styles */
+        .acc-manage-card {
+            background: #1e293b; padding: 15px 20px; border-radius: 12px; 
+            margin-bottom: 15px; display: flex; justify-content: space-between; 
+            align-items: center; border: 1px solid #334155; transition: 0.3s;
+        }
+
+        .photo-box img, .acc-photo { width: 120px; height: 120px; border-radius: 10px; object-fit: cover; border: 2px solid white; }
+        .acc-photo-small { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--bank-gold); }
+
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        input { padding: 10px; border-radius: 5px; border: none; font-weight: bold; color: #000; outline: none; }
+        
+        .btn-approve { background: #22c55e; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-block { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-unblock { background: #22c55e; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+        .status-active { color: #22c55e; font-weight: bold; font-size: 0.85rem; }
+        .status-blocked { color: #ef4444; font-weight: bold; font-size: 0.85rem; }
+
+        /* Success Modal */
+        #successModal {
+            display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+            background:rgba(0,0,0,0.9); z-index:9999; justify-content:center; align-items:center;
+        }
+        .success-box { background:white; color:black; padding:40px; border-radius:20px; text-align:center; max-width:350px; border-top: 10px solid #22c55e; }
+    </style>
+</head>
+<body>
+
+<div class="banner">
+    <h1 style="margin:0; letter-spacing: 2px;">BANK OF <span style="color:var(--bank-gold)">LK</span></h1>
+    <p style="margin:5px 0 0 0; color:#cbd5e1;">Manager Administration Panel</p>
+</div>
+
+<div class="container">
+    <h2 style="color: var(--bank-gold); border-bottom: 2px solid #334155; padding-bottom: 10px;">🏦 නව අයදුම්පත් (Pending Review)</h2>
+    <div id="pendingList">පරීක්ෂා කරමින්...</div>
+
+    <hr style="border: 1px solid #334155; margin: 50px 0;">
+
+    <h2 style="color: #3b82f6; border-bottom: 2px solid #334155; padding-bottom: 10px;">🛡️ ගිණුම් පාලනය (Active/Block Accounts)</h2>
+    <div id="activeAccountsList">ගිණුම් දත්ත පූරණය වෙමින්...</div>
+</div>
+
+<div id="successModal">
+    <div class="success-box">
+        <h2 style="color:#22c55e;">Account Successful!</h2>
+        <p id="successMsg" style="margin:15px 0;"></p>
+        <button onclick="document.getElementById('successModal').style.display='none'" style="background:var(--bank-blue); color:white; border:none; padding:12px 30px; border-radius:10px; cursor:pointer; font-weight:bold;">ලැයිස්තුවට යන්න</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+    const firebaseConfig = { databaseURL: "https://frelance-work-default-rtdb.asia-southeast1.firebasedatabase.app" };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // --- 1. Pending Applications Load ---
+    database.ref('bank_applications').orderByChild('status').equalTo('Pending').on('value', snapshot => {
+        const list = document.getElementById('pendingList');
+        list.innerHTML = "";
+        const apps = snapshot.val();
+        if (!apps) { list.innerHTML = "<p style='color:gray;'>අලුත් අයදුම්පත් නැත.</p>"; return; }
+
+        for (let id in apps) {
+            const a = apps[id];
+            list.innerHTML += `
+                <div class="app-card">
+                    <div class="photo-box"><img src="${a.photo}"></div>
+                    <div>
+                        <h3 style="margin:0; color:var(--bank-gold);">${a.name}</h3>
+                        <p>📍 ${a.address}<br>📞 ${a.phone}</p>
+                    </div>
+                    <div class="input-group">
+                        <input type="number" id="acc_${id}" placeholder="Acc No">
+                        <input type="text" id="exp_${id}" placeholder="MM/YY">
+                        <input type="number" id="cvv_${id}" placeholder="CVV">
+                        <button class="btn-approve" onclick="approveAccount('${id}', '${a.name.replace(/'/g, "\\'")}', '${a.photo}')">Approve Account</button>
+                    </div>
+                </div>`;
+        }
+    });
+
+    // --- 2. Approve Function ---
+    async function approveAccount(id, name, photo) {
+        const accNo = document.getElementById('acc_' + id).value;
+        const expDate = document.getElementById('exp_' + id).value;
+        const cvv = document.getElementById('cvv_' + id).value;
+        if (!accNo || !expDate || !cvv) { alert("විස්තර සම්පූර්ණ කරන්න!"); return; }
+
+        try {
+            await database.ref('bank_accounts/' + accNo).set({
+                name: name, accNo: accNo, expDate: expDate, cvv: cvv,
+                photo: photo, balance: 0, status: "Active"
+            });
+            await database.ref('bank_applications/' + id).update({ status: "Approved" });
+            
+            document.getElementById('successMsg').innerText = name + " ගේ ගිණුම සාර්ථකව සක්‍රීය කරන ලදී.";
+            document.getElementById('successModal').style.display = 'flex';
+        } catch (e) { alert("දෝෂයකි!"); }
+    }
+
+    // --- 3. Manage Existing Accounts Load ---
+    database.ref('bank_accounts').on('value', snapshot => {
+        const list = document.getElementById('activeAccountsList');
+        list.innerHTML = "";
+        const accounts = snapshot.val();
+        if (!accounts) return;
+
+        for (let accNo in accounts) {
+            const acc = accounts[accNo];
+            const isBlocked = acc.status === "Blocked";
+            list.innerHTML += `
+                <div class="acc-manage-card">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <img src="${acc.photo}" class="acc-photo-small">
+                        <div>
+                            <strong>${acc.name}</strong><br>
+                            <small style="color:#94a3b8;">Acc: ${accNo} | Bal: LKR ${parseFloat(acc.balance).toLocaleString()}</small>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <span class="${isBlocked ? 'status-blocked' : 'status-active'}">${isBlocked ? '● Blocked' : '● Active'}</span>
+                        <button class="${isBlocked ? 'btn-unblock' : 'btn-block'}" onclick="toggleStatus('${accNo}', '${acc.status}')">
+                            ${isBlocked ? 'Activate' : 'Block'}
+                        </button>
+                    </div>
+                </div>`;
+        }
+    });
+
+    // --- 4. Toggle Status Function ---
+    async function toggleStatus(accNo, currentStatus) {
+        const newStatus = (currentStatus === "Active") ? "Blocked" : "Active";
+        if(confirm(accNo + " ගිණුම " + newStatus + " කිරීමට අවශ්‍යද?")) {
+            await database.ref('bank_accounts/' + accNo).update({ status: newStatus });
+        }
+    }
+</script>
+</body>
+</html>
