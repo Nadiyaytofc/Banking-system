@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BANK OF LK - Digital Banking</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #0f172a; /* Deep Navy */
+            --accent: #3b82f6;  /* Bright Blue */
+            --gold: #f59e0b;    /* Golden */
+            --text-light: #f8fafc;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f1f5f9;
+            color: var(--primary);
+        }
+
+        /* Header Design */
+        header {
+            background: var(--primary);
+            color: var(--text-light);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 5px solid var(--gold);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo-area h1 {
+            margin: 0;
+            letter-spacing: 2px;
+            font-size: 2rem;
+        }
+
+        .logo-area span {
+            color: var(--gold);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), 
+                        url('https://images.unsplash.com/photo-1501167786227-4cba60f6d58f?auto=format&fit=crop&q=80&w=1000');
+            background-size: cover;
+            background-position: center;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+        /* Icon Grid Layout */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: -50px auto 50px auto;
+            padding: 0 20px;
+        }
+
+        .menu-card {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--primary);
+            border-bottom: 4px solid transparent;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-10px);
+            border-bottom: 4px solid var(--accent);
+        }
+
+        .menu-card .icon {
+            font-size: 50px;
+            color: var(--accent);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .menu-card h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .menu-card p {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 8px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+            .menu-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo-area">
+        <h1>BANK OF <span>LK</span></h1>
+        <small>Your Trusted Digital Partner</small>
+    </div>
+</header>
+
+<section class="hero">
+    <div>
+        <h2>ආයුබෝවන්! ශ්‍රී ලංකාවේ නවීනතම ඩිජිටල් බැංකු පද්ධතිය</h2>
+        <p>ආරක්ෂිත සහ වේගවත් ගනුදෙනු සඳහා අදම එක්වන්න.</p>
+    </div>
+</section>
+
+<div class="menu-grid">
+    <a href="register.html" class="menu-card">
+        <span class="material-symbols-outlined icon" style="color: #10b981;">person_add</span>
+        <h3>Register</h3>
+        <p>ගිණුමක් ආරම්භ කරන්න</p>
+    </a>
+
+    <a href="dashboard.html" class="menu-card">
+        <span class="material-symbols-outlined icon" style="color: #3b82f6;">send_money</span>
+        <h3>Online Transfer</h3>
+        <p>මුදල් යැවීමට</p>
+    </a>
+
+    <a href="admin_balance.html" class="menu-card">
+        <span class="material-symbols-outlined icon" style="color: #f59e0b;">account_balance_wallet</span>
+        <h3>Balance Counter</h3>
+        <p>ශේෂය පාලනය (Admin)</p>
+    </a>
+
+    <a href="manager.html" class="menu-card">
+        <span class="material-symbols-outlined icon" style="color: #6366f1;">verified_user</span>
+        <h3>Account Approval</h3>
+        <p>අනුමැතිය ලබාදීම (Manager)</p>
+    </a>
+</div>
+
+<footer>
+    &copy; 2025 BANK OF LK Digital Unit. All Rights Reserved.
+</footer>
+
+</body>
+</html>
