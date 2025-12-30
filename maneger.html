@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BANK OF LK - Balance Controller</title>
+    <style>
+        :root { 
+            --bank-blue: #0f172a; 
+            --bank-gold: #f59e0b; 
+            --bank-accent: #3b82f6;
+            --bg: #f1f5f9; 
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            padding: 0; 
+            margin: 0; 
+        }
+
+        /* Admin Login Overlay */
+        #adminLoginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--bank-blue); z-index: 10000; 
+            display: flex; justify-content: center; align-items: center;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 20px; 
+            width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* Top Banner Section */
+        .header-banner {
+            width: 100%; height: 180px;
+            background: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.7)), 
+                        url('https://images.unsplash.com/photo-1550565118-3d1428df732f?auto=format&fit=crop&q=80&w=1000');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; border-bottom: 5px solid var(--bank-gold);
+        }
+
+        .admin-container { 
+            max-width: 500px; margin: -40px auto 40px auto; 
+            background: white; padding: 30px; border-radius: 20px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+        }
+
+        .search-section { background: #f8fafc; padding: 20px; border-radius: 15px; border: 1px solid #e2e8f0; }
+        input { 
+            width: 100%; padding: 14px; margin: 10px 0; 
+            border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; 
+        }
+
+        .user-info { 
+            display: none; background: #ffffff; padding: 20px; border-radius: 15px; 
+            border: 2px solid #f1f5f9; margin-top: 20px; text-align: center;
+        }
+
+        .user-info img { width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--bank-gold); object-fit: cover; }
+        .current-balance { font-size: 2.2rem; color: #059669; font-weight: 800; margin: 10px 0; }
+
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-search { background: var(--bank-blue); color: white; }
+        .btn-update { background: var(--bank-gold); color: black; }
+    </style>
+</head>
+<body>
+
+<div id="adminLoginOverlay">
+    <div class="login-box">
+        <h2 style="color:var(--bank-blue); margin-top:0;">Manager Login</h2>
+        <input type="text" id="adminUser" placeholder="Username">
+        <input type="password" id="adminPass" placeholder="Password">
+        <button class="btn btn-update" onclick="checkAdminLogin()">පද්ධතියට ඇතුළු වන්න</button>
+        <p id="loginError" style="color:red; font-size:0.8rem; margin-top:10px; display:none;">අසම්මත මුරපදයකි!</p>
+    </div>
+</div>
+
+<div class="header-banner">
+    <h1>BANK OF <span style="color:var(--bank-gold)">LK</span></h1>
+    <p>Financial Control System</p>
+</div>
+
+<div class="admin-container">
+    <h2 style="text-align:center; color:var(--bank-blue);">💰 ගිණුම් ශේෂ පාලකය</h2>
+    
+    <div class="search-section">
+        <label>පාරිභෝගික ගිණුම් අංකය:</label>
+        <input type="number" id="searchAcc" placeholder="ගිණුම් අංකය ඇතුළත් කරන්න">
+        <button class="btn btn-search" onclick="searchAccount()">🔍 ගිණුම සොයන්න</button>
+    </div>
+
+    <div id="userInfo" class="user-info">
+        <img id="userPhoto" src="" alt="User">
+        <h3 id="userNameDisplay">-</h3>
+        <p id="accNoDisplay">Account: -</p>
+        
+        <div style="background: #ecfdf5; padding: 15px; border-radius: 12px;">
+            <p style="margin:0; font-size:0.8rem; color: #065f46;">වත්මන් ශේෂය</p>
+            <div class="current-balance">LKR <span id="balanceDisplay">0.00</span></div>
+        </div>
+
+        <input type="number" id="newAmount" placeholder="නව මුදල">
+        <button class="btn btn-update" onclick="updateBalance()">✅ Update Balance</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+    // Login Logic
+    function checkAdminLogin() {
+        const user = document.getElementById('adminUser').value;
+        const pass = document.getElementById('adminPass').value;
+        if(user === "admin" && pass === "lkbank@2025") {
+            document.getElementById('adminLoginOverlay').style.display = "none";
+            sessionStorage.setItem("managerLogged", "true");
+        } else {
+            document.getElementById('loginError').style.display = "block";
+        }
+    }
+
+    // Firebase Config
+    const firebaseConfig = { databaseURL: "https://frelance-work-default-rtdb.asia-southeast1.firebasedatabase.app" };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    let activeAccNo = "";
+
+    async function searchAccount() {
+        const accNo = document.getElementById('searchAcc').value;
+        database.ref('bank_accounts/' + accNo).once('value', snapshot => {
+            if(snapshot.exists()) {
+                const data = snapshot.val();
+                activeAccNo = accNo;
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('userNameDisplay').innerText = data.name;
+                document.getElementById('accNoDisplay').innerText = "Account: " + data.accNo;
+                document.getElementById('userPhoto').src = data.photo;
+                document.getElementById('balanceDisplay').innerText = parseFloat(data.balance).toLocaleString();
+                document.getElementById('newAmount').value = data.balance;
+            } else { alert("ගිණුම හමු නොවීය!"); }
+        });
+    }
+
+    async function updateBalance() {
+        const amount = parseFloat(document.getElementById('newAmount').value);
+        await database.ref('bank_accounts/' + activeAccNo).update({ balance: amount });
+        document.getElementById('balanceDisplay').innerText = amount.toLocaleString();
+        alert("සාර්ථකව යාවත්කාලීන කරන ලදී!");
+    }
+
+    window.onload = () => {
+        if(sessionStorage.getItem("managerLogged") === "true") {
+            document.getElementById('adminLoginOverlay').style.display = "none";
+        }
+    }
+</script>
+</body>
+</html>
