@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BANK OF LK - Online Banking</title>
+    <style>
+        /* මූලික වර්ණ සහ හැඩතල */
+        :root { --bank-blue: #0f172a; --bank-gold: #f59e0b; --bg: #f3f4f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
+        
+        /* Header එක BANK OF LK ලෙස වෙනස් කරන ලදී */
+        header { 
+            background: var(--bank-blue); 
+            color: white; padding: 15px 20px; 
+            display: flex; justify-content: space-between; 
+            align-items: center; border-bottom: 4px solid var(--bank-gold); 
+        }
+
+        .container { max-width: 450px; margin: 20px auto; padding: 15px; }
+
+        /* බැංකු රූපය සහිත Banner එක */
+        .bank-banner {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.5)), 
+                        url('https://images.unsplash.com/photo-1541339907198-e08756dedff3?auto=format&fit=crop&q=80&w=600');
+            background-size: cover;
+            background-position: center;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .info-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; }
+        .btn-transfer { background: var(--bank-blue); color: white; border: none; padding: 16px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        
+        /* History Styles */
+        .history-box { text-align: left; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .txn-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+        .txn-sent { color: #e11d48; font-weight: bold; }
+        .txn-received { color: #16a34a; font-weight: bold; }
+
+        /* Modal Styles */
+        #otpModal, #receiptModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center; }
+        .modal-box { background:white; padding:30px; border-radius:20px; width:300px; text-align:center; color:#000; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div style="font-weight:bold; letter-spacing: 1px;">BANK OF LK</div>
+    <button onclick="logout()" style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer; border-radius: 5px;">Logout</button>
+</header>
+
+<div class="container">
+    <div class="bank-banner">
+        <h2 style="margin:0;">BANK OF LK</h2>
+    </div>
+
+    <div id="loginSection">
+        <div class="info-card">
+            <h3 style="color: var(--bank-blue);">ගිණුමට ඇතුළු වන්න</h3>
+            <input type="text" id="loginAcc" placeholder="ගිණුම් අංකය" style="width:100%; padding:12px; margin:10px 0; text-align:center; border:1px solid #ccc; border-radius:8px;">
+            <button class="btn-transfer" onclick="login()">Login</button>
+        </div>
+    </div>
+
+    <div id="dashboardSection" style="display:none;">
+        <div class="info-card">
+            <small>Available Balance</small>
+            <div style="font-size: 2.2rem; font-weight: bold; color: var(--bank-blue);">LKR <span id="balanceDisp">0.00</span></div>
+            <p id="cardHolder" style="font-weight:bold; color:gray;"></p>
+        </div>
+        
+        <button class="btn-transfer" id="mainTransferBtn" onclick="openTransfer()">💸 මුදල් මාරු කරන්න (Transfer)</button>
+        
+        <div class="history-box" style="margin-top:20px;">
+            <h4 style="margin-top:0; border-bottom: 2px solid var(--bank-gold); padding-bottom:5px;">ගනුදෙනු වාර්තා</h4>
+            <div id="txnHistory">පූරණය වෙමින්...</div>
+        </div>
+    </div>
+</div>
+
+<div id="otpModal">
+    <div class="modal-box">
+        <h3>🔐 OTP Verification</h3>
+        <div id="generatedOtpDisplay" style="font-size:2.5rem; letter-spacing:5px; color:#e11d48; margin:15px 0;">000000</div>
+        <input type="number" id="userInputOtp" placeholder="Enter OTP" style="width:100%; padding:12px; text-align:center; margin-bottom:15px;">
+        <button class="btn-transfer" onclick="verifyAndPay()">Confirm Payment</button>
+    </div>
+</div>
+
+<div id="receiptModal">
+    <div class="modal-box" style="text-align:left;">
+        <h3 style="text-align:center; color:green;">✔ Success</h3>
+        <hr>
+        <p>Date: <b id="rDate"></b></p>
+        <p>To Account: <b id="rTo"></b></p>
+        <p>Amount: <b id="rAmt"></b></p>
+        <button class="btn-transfer" onclick="location.reload()">Close</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+    // Logic එකෙහි කිසිදු වෙනසක් කර නැත
+    const firebaseConfig = { databaseURL: "https://frelance-work-default-rtdb.asia-southeast1.firebasedatabase.app" };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    let transferData = {};
+
+    function login() {
+        const acc = document.getElementById('loginAcc').value;
+        database.ref('bank_accounts/' + acc).once('value', s => {
+            if(s.exists()){ localStorage.setItem("userBankAcc", acc); showDashboard(s.val()); }
+            else { alert("ගිණුම හමු නොවීය!"); }
+        });
+    }
+
+    function showDashboard(data) {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('dashboardSection').style.display = 'block';
+        document.getElementById('cardHolder').innerText = data.name;
+        database.ref('bank_accounts/' + data.accNo + '/balance').on('value', snap => {
+            document.getElementById('balanceDisp').innerText = parseFloat(snap.val() || 0).toLocaleString();
+        });
+        loadHistory(data.accNo);
+    }
+
+    async function openTransfer() {
+        const rAcc = prompt("ලබන්නාගේ ගිණුම් අංකය:");
+        if(!rAcc) return;
+        const amt = parseFloat(prompt("මුදල (LKR):"));
+        if(!amt || amt <= 0) return;
+        const btn = document.getElementById('mainTransferBtn');
+        btn.innerText = "Waiting for OTP...";
+        btn.disabled = true;
+
+        setTimeout(async () => {
+            const sAcc = localStorage.getItem("userBankAcc");
+            const sSnap = await database.ref('bank_accounts/' + sAcc).once('value');
+            const rSnap = await database.ref('bank_accounts/' + rAcc).once('value');
+            if(!rSnap.exists() || amt > sSnap.val().balance) {
+                alert("වැරදි ගිණුමක් හෝ මුදල් මදි!");
+                btn.innerText = "💸 මුදල් මාරු කරන්න (Transfer)"; btn.disabled = false;
+                return;
+            }
+            const otp = Math.floor(100000 + Math.random() * 900000);
+            transferData = { sAcc, rAcc, amt, otp, sBal: sSnap.val().balance, rBal: rSnap.val().balance };
+            document.getElementById('otpModal').style.display = 'flex';
+            document.getElementById('generatedOtpDisplay').innerText = otp;
+            btn.innerText = "💸 මුදල් මාරු කරන්න (Transfer)"; btn.disabled = false;
+        }, 2000);
+    }
+
+    async function verifyAndPay() {
+        if(document.getElementById('userInputOtp').value == transferData.otp) {
+            await database.ref('bank_accounts/' + transferData.sAcc).update({ balance: (transferData.sBal - transferData.amt) });
+            await database.ref('bank_accounts/' + transferData.rAcc).update({ balance: (transferData.rBal + transferData.amt) });
+            await database.ref('bank_transactions').push({
+                from: transferData.sAcc, to: transferData.rAcc,
+                amount: transferData.amt, date: new Date().toLocaleString()
+            });
+            document.getElementById('rDate').innerText = new Date().toLocaleString();
+            document.getElementById('rTo').innerText = transferData.rAcc;
+            document.getElementById('rAmt').innerText = "LKR " + transferData.amt.toLocaleString();
+            document.getElementById('otpModal').style.display = 'none';
+            document.getElementById('receiptModal').style.display = 'flex';
+        } else { alert("OTP වැරදියි!"); }
+    }
+
+    function loadHistory(myAcc) {
+        database.ref('bank_transactions').on('value', snap => {
+            const historyDiv = document.getElementById('txnHistory');
+            historyDiv.innerHTML = "";
+            const data = snap.val();
+            if(!data) { historyDiv.innerHTML = "ගනුදෙනු නැත."; return; }
+            Object.values(data).reverse().forEach(txn => {
+                if(txn.from == myAcc || txn.to == myAcc) {
+                    const isSent = txn.from == myAcc;
+                    historyDiv.innerHTML += `
+                        <div class="txn-row">
+                            <div>
+                                <span class="${isSent ? 'txn-sent' : 'txn-received'}">${isSent ? 'Sent' : 'Received'}</span><br>
+                                <small style="color:gray">${txn.date}</small>
+                            </div>
+                            <div style="text-align:right">
+                                <b>${isSent ? '-' : '+'} ${txn.amount.toLocaleString()}</b><br>
+                                <small>${isSent ? 'To: '+txn.to : 'From: '+txn.from}</small>
+                            </div>
+                        </div>`;
+                }
+            });
+        });
+    }
+
+    function logout() { localStorage.clear(); location.reload(); }
+    window.onload = () => {
+        const acc = localStorage.getItem("userBankAcc");
+        if(acc) database.ref('bank_accounts/' + acc).once('value', s => showDashboard(s.val()));
+    }
+</script>
+</body>
+</html>
