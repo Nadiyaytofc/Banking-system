@@ -8,43 +8,66 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
+        /* CSS Variables - Light/Dark Mode */
         :root {
-            --primary: #0f172a; /* Deep Navy */
-            --accent: #3b82f6;  /* Bright Blue */
-            --gold: #f59e0b;    /* Golden */
-            --text-light: #f8fafc;
+            --primary: #0f172a; 
+            --accent: #3b82f6;  
+            --gold: #f59e0b;    
+            --join-color: #06b6d4; /* Join with Us අලුත් වර්ණය */
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --header-bg: #0f172a;
+        }
+
+        [data-theme="dark"] {
+            --primary: #1e293b;
+            --accent: #60a5fa;
+            --gold: #fbbf24;
+            --join-color: #22d3ee;
+            --bg-color: #020617;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --header-bg: #000000;
         }
 
         body {
             margin: 0;
             font-family: 'Poppins', sans-serif;
-            background-color: #f1f5f9;
-            color: var(--primary);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: all 0.4s ease;
         }
 
-        /* Header Design */
         header {
-            background: var(--primary);
-            color: var(--text-light);
+            background: var(--header-bg);
+            color: white;
             padding: 20px;
             text-align: center;
             border-bottom: 5px solid var(--gold);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: relative;
         }
 
-        .logo-area h1 {
-            margin: 0;
-            letter-spacing: 2px;
-            font-size: 2rem;
+        #themeToggle {
+            position: absolute;
+            right: 20px;
+            top: 25px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--gold);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        .logo-area span {
-            color: var(--gold);
-        }
-
-        /* Hero Section */
         .hero {
-            background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), 
+            background: linear-gradient(rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.6)), 
                         url('https://images.unsplash.com/photo-1501167786227-4cba60f6d58f?auto=format&fit=crop&q=80&w=1000');
             background-size: cover;
             background-position: center;
@@ -56,26 +79,25 @@
             text-align: center;
         }
 
-        /* Icon Grid Layout */
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
-            max-width: 1000px;
+            max-width: 1200px;
             margin: -50px auto 50px auto;
             padding: 0 20px;
         }
 
         .menu-card {
-            background: white;
-            padding: 30px 20px;
+            background: var(--card-bg);
+            padding: 25px 15px;
             border-radius: 20px;
             text-align: center;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             cursor: pointer;
             text-decoration: none;
-            color: var(--primary);
+            color: var(--text-main);
             border-bottom: 4px solid transparent;
         }
 
@@ -85,33 +107,16 @@
         }
 
         .menu-card .icon {
-            font-size: 50px;
-            color: var(--accent);
-            margin-bottom: 15px;
+            font-size: 45px;
+            margin-bottom: 12px;
             display: block;
         }
 
-        .menu-card h3 {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 600;
-        }
+        .menu-card h3 { margin: 0; font-size: 1.1rem; }
+        .menu-card p { color: var(--text-sub); font-size: 0.85rem; margin-top: 5px; }
 
-        .menu-card p {
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-top: 8px;
-        }
+        footer { text-align: center; padding: 30px; color: var(--text-sub); font-size: 0.8rem; }
 
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 30px;
-            color: #64748b;
-            font-size: 0.8rem;
-        }
-
-        /* Mobile Responsive */
         @media (max-width: 600px) {
             .menu-grid { grid-template-columns: 1fr 1fr; }
         }
@@ -120,6 +125,10 @@
 <body>
 
 <header>
+    <button id="themeToggle" onclick="toggleTheme()">
+        <span class="material-symbols-outlined" style="font-size: 18px;">dark_mode</span>
+        <span id="themeText">Dark Mode</span>
+    </button>
     <div class="logo-area">
         <h1>BANK OF <span>LK</span></h1>
         <small>Your Trusted Digital Partner</small>
@@ -128,8 +137,8 @@
 
 <section class="hero">
     <div>
-        <h2>ආයුබෝවන්! ශ්‍රී ලංකාවේ නවීනතම ඩිජිටල් බැංකු පද්ධතිය</h2>
-        <p>ආරක්ෂිත සහ වේගවත් ගනුදෙනු සඳහා අදම එක්වන්න.</p>
+        <h2 style="margin:0; font-size: 2rem;">ආයුබෝවන්!</h2>
+        <p>ශ්‍රී ලංකාවේ ප්‍රමුඛතම ඩිජිටල් බැංකු අත්දැකීම</p>
     </div>
 </section>
 
@@ -137,25 +146,37 @@
     <a href="register.html" class="menu-card">
         <span class="material-symbols-outlined icon" style="color: #10b981;">person_add</span>
         <h3>Register</h3>
-        <p>ගිණුමක් ආරම්භ කරන්න</p>
+        <p>නව ගිණුමක් අරඹන්න</p>
     </a>
 
     <a href="dashboard.html" class="menu-card">
-        <span class="material-symbols-outlined icon" style="color: #3b82f6;">send_money</span>
-        <h3>Online Transfer</h3>
+        <span class="material-symbols-outlined icon" style="color: #3b82f6;">account_balance</span>
+        <h3>Dashboard</h3>
+        <p>ගිණුම් තොරතුරු</p>
+    </a>
+
+    <a href="transfer.html" class="menu-card">
+        <span class="material-symbols-outlined icon" style="color: #8b5cf6;">send_money</span>
+        <h3>Transfer</h3>
         <p>මුදල් යැවීමට</p>
     </a>
 
     <a href="admin_balance.html" class="menu-card">
-        <span class="material-symbols-outlined icon" style="color: #f59e0b;">account_balance_wallet</span>
-        <h3>Balance Counter</h3>
+        <span class="material-symbols-outlined icon" style="color: #f59e0b;">payments</span>
+        <h3>Balance Control</h3>
         <p>ශේෂය පාලනය (Admin)</p>
     </a>
 
     <a href="manager.html" class="menu-card">
-        <span class="material-symbols-outlined icon" style="color: #6366f1;">verified_user</span>
-        <h3>Account Approval</h3>
-        <p>අනුමැතිය ලබාදීම (Manager)</p>
+        <span class="material-symbols-outlined icon" style="color: var(--gold);">admin_panel_settings</span>
+        <h3>Manager</h3>
+        <p>කළමනාකරු පුවරුව</p>
+    </a>
+
+    <a href="affiliate.html" class="menu-card" style="border-bottom: 4px solid var(--join-color);">
+        <span class="material-symbols-outlined icon" style="color: var(--join-color);">groups</span>
+        <h3 style="color: var(--join-color);">Join With Us</h3>
+        <p>සම්බන්ධීකරණ අධ්‍යයනය</p>
     </a>
 </div>
 
@@ -163,5 +184,33 @@
     &copy; 2025 BANK OF LK Digital Unit. All Rights Reserved.
 </footer>
 
+<script>
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute("data-theme");
+        const targetTheme = currentTheme === "dark" ? "light" : "dark";
+        setTheme(targetTheme);
+    }
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("bank-theme", theme);
+        const themeText = document.getElementById("themeText");
+        const themeIcon = document.querySelector("#themeToggle span");
+        
+        if (theme === "dark") {
+            themeText.innerText = "Light Mode";
+            themeIcon.innerText = "light_mode";
+        } else {
+            themeText.innerText = "Dark Mode";
+            themeIcon.innerText = "dark_mode";
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem("bank-theme") || "light";
+        setTheme(savedTheme);
+    });
+</script>
+
 </body>
-</html>
+                                                                                                         </html>
