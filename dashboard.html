@@ -4,53 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BANK OF LK - Online Banking</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        /* මූලික වර්ණ සහ හැඩතල */
-        :root { --bank-blue: #0f172a; --bank-gold: #f59e0b; --bg: #f3f4f6; }
+        :root { --bank-blue: #0f172a; --bank-gold: #f59e0b; --bg: #f3f4f6; --bank-red: #ef4444; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
-        
-        /* Header එක BANK OF LK ලෙස වෙනස් කරන ලදී */
-        header { 
-            background: var(--bank-blue); 
-            color: white; padding: 15px 20px; 
-            display: flex; justify-content: space-between; 
-            align-items: center; border-bottom: 4px solid var(--bank-gold); 
-        }
-
+        header { background: var(--bank-blue); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--bank-gold); }
         .container { max-width: 450px; margin: 20px auto; padding: 15px; }
-
-        /* බැංකු රූපය සහිත Banner එක */
-        .bank-banner {
-            width: 100%;
-            height: 150px;
-            background: linear-gradient(rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.5)), 
-                        url('https://images.unsplash.com/photo-1541339907198-e08756dedff3?auto=format&fit=crop&q=80&w=600');
-            background-size: cover;
-            background-position: center;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .info-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; }
-        .btn-transfer { background: var(--bank-blue); color: white; border: none; padding: 16px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; }
         
-        /* History Styles */
+        #notificationBar { display:none; background: #dcfce7; border-bottom: 2px solid #22c55e; padding: 12px; text-align: center; color: #166534; font-weight: bold; font-size: 0.85rem; position: sticky; top: 0; z-index: 1000; }
+        
+        .bank-banner { width: 100%; height: 150px; background: linear-gradient(rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.5)), url('https://images.unsplash.com/photo-1541339907198-e08756dedff3?auto=format&fit=crop&q=80&w=600'); background-size: cover; background-position: center; border-radius: 15px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        
+        .info-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; }
+        .user-avatar { width: 85px; height: 85px; border-radius: 50%; border: 3px solid var(--bank-gold); object-fit: cover; margin-bottom: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        
+        .btn-transfer { background: var(--bank-blue); color: white; border: none; padding: 16px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .topup-card { background: white; padding: 20px; border-radius: 15px; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px dashed var(--bank-gold); }
+        .withdraw-card { background: white; padding: 20px; border-radius: 15px; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px dashed var(--bank-red); }
+        
+        .topup-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .preview-img { width: 100%; border-radius: 10px; margin-top: 10px; display: none; border: 1px solid #ddd; }
+        
         .history-box { text-align: left; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .txn-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 0.85rem; }
-        .txn-sent { color: #e11d48; font-weight: bold; }
-        .txn-received { color: #16a34a; font-weight: bold; }
-
-        /* Modal Styles */
+        
         #otpModal, #receiptModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center; }
-        .modal-box { background:white; padding:30px; border-radius:20px; width:300px; text-align:center; color:#000; }
+        .modal-box { background:white; padding:30px; border-radius:20px; width:320px; text-align:center; color:#000; }
     </style>
 </head>
 <body>
+
+<div id="notificationBar">
+    <span id="notifMessage"></span>
+    <button onclick="this.parentElement.style.display='none'" style="margin-left:10px; background:none; border:none; color:#166534; cursor:pointer; font-weight:bold;">✕</button>
+</div>
 
 <header>
     <div style="font-weight:bold; letter-spacing: 1px;">BANK OF LK</div>
@@ -58,9 +45,7 @@
 </header>
 
 <div class="container">
-    <div class="bank-banner">
-        <h2 style="margin:0;">BANK OF LK</h2>
-    </div>
+    <div class="bank-banner"><h2>BANK OF LK</h2></div>
 
     <div id="loginSection">
         <div class="info-card">
@@ -72,12 +57,33 @@
 
     <div id="dashboardSection" style="display:none;">
         <div class="info-card">
+            <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 15px;">
+                <img id="userAvatar" src="https://via.placeholder.com/85" class="user-avatar">
+                <h4 id="cardHolder" style="margin: 0; color: var(--bank-blue); font-size: 1.2rem;">-</h4>
+                <small id="accNumberDisp" style="color: gray; font-weight: bold;">Acc: 000000</small>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
             <small>Available Balance</small>
             <div style="font-size: 2.2rem; font-weight: bold; color: var(--bank-blue);">LKR <span id="balanceDisp">0.00</span></div>
-            <p id="cardHolder" style="font-weight:bold; color:gray;"></p>
         </div>
         
         <button class="btn-transfer" id="mainTransferBtn" onclick="openTransfer()">💸 මුදල් මාරු කරන්න (Transfer)</button>
+
+        <div class="withdraw-card">
+            <h4 style="margin-top:0; color:var(--bank-red);">🏧 මුදල් ලබාගැනීම (Withdraw)</h4>
+            <input type="number" id="withdrawAmt" class="topup-input" placeholder="ලබාගැනීමට අවශ්‍ය මුදල (Rs)">
+            <input type="text" id="withdrawMethod" class="topup-input" placeholder="ලබාගන්නා ක්‍රමය (Binance/EasyCash)">
+            <button class="btn-transfer" style="background:var(--bank-red);" id="withdrawSubmitBtn" onclick="submitWithdrawRequest()">Withdrawal ඉල්ලීම යොමු කරන්න</button>
+        </div>
+
+        <div class="topup-card">
+            <h4 style="margin-top:0; color:var(--bank-gold);">📸 Wallet Top-up (Freelance)</h4>
+            <input type="number" id="topupAmt" class="topup-input" placeholder="Wallet එකේ ඇති මුදල (Rs)">
+            <input type="file" id="topupFile" accept="image/*" style="display:none;" onchange="previewScreenshot(event)">
+            <button onclick="document.getElementById('topupFile').click()" style="background:#e2e8f0; border:none; padding:10px; width:100%; border-radius:8px; cursor:pointer;">Screenshot එක තෝරන්න</button>
+            <img id="screenshotPreview" class="preview-img">
+            <button class="btn-transfer" style="margin-top:15px; background:var(--bank-gold); color:black;" id="topupSubmitBtn" onclick="submitTopupRequest()">Top-up ඉල්ලීම යොමු කරන්න</button>
+        </div>
         
         <div class="history-box" style="margin-top:20px;">
             <h4 style="margin-top:0; border-bottom: 2px solid var(--bank-gold); padding-bottom:5px;">ගනුදෙනු වාර්තා</h4>
@@ -86,23 +92,23 @@
     </div>
 </div>
 
-<div id="otpModal">
-    <div class="modal-box">
-        <h3>🔐 OTP Verification</h3>
-        <div id="generatedOtpDisplay" style="font-size:2.5rem; letter-spacing:5px; color:#e11d48; margin:15px 0;">000000</div>
-        <input type="number" id="userInputOtp" placeholder="Enter OTP" style="width:100%; padding:12px; text-align:center; margin-bottom:15px;">
-        <button class="btn-transfer" onclick="verifyAndPay()">Confirm Payment</button>
-    </div>
-</div>
+<div id="otpModal"><div class="modal-box"><h3>🔐 OTP Verification</h3><div id="generatedOtpDisplay" style="font-size:2.5rem; letter-spacing:5px; color:#e11d48; margin:15px 0;">000000</div><input type="number" id="userInputOtp" placeholder="Enter OTP" style="width:100%; padding:12px; text-align:center; margin-bottom:15px;"><button class="btn-transfer" onclick="verifyAndPay()">Confirm Payment</button></div></div>
 
 <div id="receiptModal">
-    <div class="modal-box" style="text-align:left;">
-        <h3 style="text-align:center; color:green;">✔ Success</h3>
-        <hr>
-        <p>Date: <b id="rDate"></b></p>
-        <p>To Account: <b id="rTo"></b></p>
-        <p>Amount: <b id="rAmt"></b></p>
-        <button class="btn-transfer" onclick="location.reload()">Close</button>
+    <div class="modal-box" id="printableReceipt" style="text-align:left; border: 1px solid #eee;">
+        <div style="text-align:center; margin-bottom: 15px;"><h2 style="color: var(--bank-blue); margin:0;">BANK OF LK</h2><small style="color:gray;">Official Receipt</small></div>
+        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; font-size: 0.85rem;">
+            <p>Date: <b id="rDate"></b></p>
+            <p>Reference: <b>#TRX-BK${Math.floor(Math.random()*900000)+100000}</b></p>
+            <hr style="border:0.5px solid #ddd;">
+            <p>To Account: <b id="rTo"></b></p>
+            <p style="font-size: 1.1rem; color: #16a34a; margin-top:10px;">Amount: <b id="rAmt"></b></p>
+            <p style="color: #16a34a;">Status: <b>SUCCESSFUL</b></p>
+        </div>
+        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
+            <button class="btn-transfer" onclick="downloadPDF()" style="background:#16a34a; padding:10px;">📥 Download PDF</button>
+            <button class="btn-transfer" onclick="location.reload()" style="background:#64748b; padding:10px;">Close</button>
+        </div>
     </div>
 </div>
 
@@ -110,11 +116,11 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-    // Logic එකෙහි කිසිදු වෙනසක් කර නැත
     const firebaseConfig = { databaseURL: "https://frelance-work-default-rtdb.asia-southeast1.firebasedatabase.app" };
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     let transferData = {};
+    let loggedUserName = "";
 
     function login() {
         const acc = document.getElementById('loginAcc').value;
@@ -125,54 +131,118 @@
     }
 
     function showDashboard(data) {
+        loggedUserName = data.name;
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('dashboardSection').style.display = 'block';
         document.getElementById('cardHolder').innerText = data.name;
+        document.getElementById('accNumberDisp').innerText = "Acc: " + data.accNo;
+        if(data.photo) document.getElementById('userAvatar').src = data.photo;
+
         database.ref('bank_accounts/' + data.accNo + '/balance').on('value', snap => {
             document.getElementById('balanceDisp').innerText = parseFloat(snap.val() || 0).toLocaleString();
         });
+
         loadHistory(data.accNo);
+        listenForNotifications(data.accNo);
+    }
+
+    // Withdraw Request Logic
+    async function submitWithdrawRequest() {
+        const amt = document.getElementById('withdrawAmt').value;
+        const method = document.getElementById('withdrawMethod').value;
+        const acc = localStorage.getItem("userBankAcc");
+        const btn = document.getElementById('withdrawSubmitBtn');
+
+        if(!amt || !method) return alert("මුදල සහ ලබාගන්නා ක්‍රමය ඇතුළත් කරන්න!");
+
+        const snap = await database.ref('bank_accounts/' + acc).once('value');
+        if(Number(amt) > snap.val().balance) return alert("ගිණුමේ ප්‍රමාණවත් මුදල් නොමැත!");
+
+        btn.disabled = true; btn.innerText = "Processing...";
+        await database.ref('withdraw_requests').push({
+            name: loggedUserName, accNo: acc, amount: Number(amt),
+            method: method, status: "Pending", date: new Date().toLocaleString()
+        });
+        alert("Withdrawal ඉල්ලීම යොමු කරන ලදී!");
+        location.reload();
+    }
+
+    // Top-up Request
+    async function submitTopupRequest() {
+        const amt = document.getElementById('topupAmt').value;
+        const file = document.getElementById('topupFile').files[0];
+        if(!amt || !file) return alert("මුදල සහ Screenshot එක ඇතුළත් කරන්න!");
+        const btn = document.getElementById('topupSubmitBtn');
+        btn.disabled = true; btn.innerText = "Processing...";
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            await database.ref('wallet_topups').push({
+                name: loggedUserName, accNo: localStorage.getItem("userBankAcc"), amount: Number(amt),
+                screenshot: reader.result, status: "Pending", date: new Date().toLocaleString()
+            });
+            alert("Top-up ඉල්ලීම යොමු කරන ලදී!");
+            location.reload();
+        };
+    }
+
+    // Common Functions
+    function downloadPDF() {
+        const element = document.getElementById('printableReceipt');
+        const buttons = element.querySelectorAll('button');
+        buttons.forEach(btn => btn.style.display = 'none');
+        html2pdf().from(element).save().then(() => { buttons.forEach(btn => btn.style.display = 'block'); });
+    }
+
+    function listenForNotifications(accNo) {
+        database.ref('bank_transactions').orderByChild('to').equalTo(accNo).limitToLast(1).on('child_added', snap => {
+            const txn = snap.val();
+            if (new Date().getTime() - new Date(txn.date).getTime() < 10000) showNotif(`📥 මුදලක් ලැබුණි: Rs. ${txn.amount.toLocaleString()}`);
+        });
+        database.ref('wallet_topups').orderByChild('accNo').equalTo(accNo).on('child_changed', snap => {
+            if(snap.val().status === "Approved") showNotif(`✅ Top-up අනුමත විය!`);
+        });
+    }
+
+    function showNotif(msg) {
+        document.getElementById('notifMessage').innerText = msg;
+        document.getElementById('notificationBar').style.display = 'block';
+        setTimeout(() => { document.getElementById('notificationBar').style.display = 'none'; }, 10000);
+    }
+
+    function previewScreenshot(event) {
+        const reader = new FileReader();
+        reader.onload = () => { document.getElementById('screenshotPreview').src = reader.result; document.getElementById('screenshotPreview').style.display = 'block'; };
+        reader.readAsDataURL(event.target.files[0]);
     }
 
     async function openTransfer() {
         const rAcc = prompt("ලබන්නාගේ ගිණුම් අංකය:");
-        if(!rAcc) return;
         const amt = parseFloat(prompt("මුදල (LKR):"));
-        if(!amt || amt <= 0) return;
+        if(!rAcc || !amt || amt <= 0) return;
         const btn = document.getElementById('mainTransferBtn');
-        btn.innerText = "Waiting for OTP...";
-        btn.disabled = true;
-
+        btn.innerText = "Waiting for OTP..."; btn.disabled = true;
         setTimeout(async () => {
             const sAcc = localStorage.getItem("userBankAcc");
             const sSnap = await database.ref('bank_accounts/' + sAcc).once('value');
             const rSnap = await database.ref('bank_accounts/' + rAcc).once('value');
-            if(!rSnap.exists() || amt > sSnap.val().balance) {
-                alert("වැරදි ගිණුමක් හෝ මුදල් මදි!");
-                btn.innerText = "💸 මුදල් මාරු කරන්න (Transfer)"; btn.disabled = false;
-                return;
-            }
+            if(!rSnap.exists() || amt > sSnap.val().balance) { alert("මුදල් මදි හෝ වැරදි ගිණුමකි!"); location.reload(); return; }
             const otp = Math.floor(100000 + Math.random() * 900000);
             transferData = { sAcc, rAcc, amt, otp, sBal: sSnap.val().balance, rBal: rSnap.val().balance };
             document.getElementById('otpModal').style.display = 'flex';
             document.getElementById('generatedOtpDisplay').innerText = otp;
-            btn.innerText = "💸 මුදල් මාරු කරන්න (Transfer)"; btn.disabled = false;
+            btn.innerText = "💸 මුදල් මාරු කරන්න"; btn.disabled = false;
         }, 2000);
     }
 
     async function verifyAndPay() {
         if(document.getElementById('userInputOtp').value == transferData.otp) {
+            const now = new Date().toLocaleString();
             await database.ref('bank_accounts/' + transferData.sAcc).update({ balance: (transferData.sBal - transferData.amt) });
             await database.ref('bank_accounts/' + transferData.rAcc).update({ balance: (transferData.rBal + transferData.amt) });
-            await database.ref('bank_transactions').push({
-                from: transferData.sAcc, to: transferData.rAcc,
-                amount: transferData.amt, date: new Date().toLocaleString()
-            });
-            document.getElementById('rDate').innerText = new Date().toLocaleString();
-            document.getElementById('rTo').innerText = transferData.rAcc;
-            document.getElementById('rAmt').innerText = "LKR " + transferData.amt.toLocaleString();
-            document.getElementById('otpModal').style.display = 'none';
-            document.getElementById('receiptModal').style.display = 'flex';
+            await database.ref('bank_transactions').push({ from: transferData.sAcc, to: transferData.rAcc, amount: transferData.amt, date: now });
+            document.getElementById('rDate').innerText = now; document.getElementById('rTo').innerText = transferData.rAcc; document.getElementById('rAmt').innerText = "LKR " + transferData.amt.toLocaleString();
+            document.getElementById('otpModal').style.display = 'none'; document.getElementById('receiptModal').style.display = 'flex';
         } else { alert("OTP වැරදියි!"); }
     }
 
@@ -180,32 +250,18 @@
         database.ref('bank_transactions').on('value', snap => {
             const historyDiv = document.getElementById('txnHistory');
             historyDiv.innerHTML = "";
-            const data = snap.val();
-            if(!data) { historyDiv.innerHTML = "ගනුදෙනු නැත."; return; }
-            Object.values(data).reverse().forEach(txn => {
+            if(!snap.val()) { historyDiv.innerHTML = "ගනුදෙනු නැත."; return; }
+            Object.values(snap.val()).reverse().forEach(txn => {
                 if(txn.from == myAcc || txn.to == myAcc) {
                     const isSent = txn.from == myAcc;
-                    historyDiv.innerHTML += `
-                        <div class="txn-row">
-                            <div>
-                                <span class="${isSent ? 'txn-sent' : 'txn-received'}">${isSent ? 'Sent' : 'Received'}</span><br>
-                                <small style="color:gray">${txn.date}</small>
-                            </div>
-                            <div style="text-align:right">
-                                <b>${isSent ? '-' : '+'} ${txn.amount.toLocaleString()}</b><br>
-                                <small>${isSent ? 'To: '+txn.to : 'From: '+txn.from}</small>
-                            </div>
-                        </div>`;
+                    historyDiv.innerHTML += `<div class="txn-row"><div><span style="color:${isSent?'#e11d48':'#16a34a'};font-weight:bold">${isSent?'Sent':'Received'}</span><br><small style="color:gray">${txn.date}</small></div><div style="text-align:right"><b>${isSent?'-':'+'} ${txn.amount.toLocaleString()}</b><br><small>${isSent?'To: '+txn.to:'From: '+txn.from}</small></div></div>`;
                 }
             });
         });
     }
 
     function logout() { localStorage.clear(); location.reload(); }
-    window.onload = () => {
-        const acc = localStorage.getItem("userBankAcc");
-        if(acc) database.ref('bank_accounts/' + acc).once('value', s => showDashboard(s.val()));
-    }
+    window.onload = () => { if(localStorage.getItem("userBankAcc")) login(); }
 </script>
 </body>
 </html>
